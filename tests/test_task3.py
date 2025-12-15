@@ -1,55 +1,157 @@
 import pytest
 import sys
 import os
-from unittest.mock import patch
 from io import StringIO
 
 # Add parent directory to path to import student's code
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-class TestPeculiarEmporium:
+def check_hardcoding():
+    """Helper function to check for hard-coding with test data"""
+    with open('task1.py', 'r') as f:
+        code = f.read()
     
-    def test_receipt_with_mock_input(self):
-        """Test receipt generation with mocked input - 10 points"""
-        # Mock input values
-        test_inputs = ["Magic Beans", "25.50", "4"]
-        
-        # Expected calculations
-        # subtotal = 25.50 * 4 = 102.0
-        # tax = 102.0 * 0.095 = 9.69
-        # total = 102.0 + 9.69 = 111.69 (rounded)
-        
-        expected_item_line = "Magic Beans x4 @ $25.5"  # Could also be 25.50
-        expected_subtotal = "102.0"  # Could appear as 102.0 or 102
-        expected_tax = "9.69"
-        expected_total = "111.69"
-        
-        # Capture output with mocked input
-        with patch('builtins.input', side_effect=test_inputs):
-            old_stdout = sys.stdout
-            sys.stdout = StringIO()
-            
-            try:
-                import task3
-                import importlib
-                importlib.reload(task3)
-                task3.main()
-                
-                output = sys.stdout.getvalue()
-            finally:
-                sys.stdout = old_stdout
-        
-        # Check receipt format and values
-        assert "Magic Beans" in output, "Item name missing from receipt"
-        assert "x4" in output, "Quantity missing from receipt"
-        assert "25.5" in output, "Price missing from receipt"
-        assert "--------------------------" in output, "Receipt separator missing"
-        assert "Subtotal:" in output or "subtotal:" in output, "Subtotal label missing"
-        assert expected_subtotal in output or "102" in output, "Subtotal value incorrect"
-        assert "Tax:" in output or "tax:" in output, "Tax label missing"
-        assert expected_tax in output, "Tax value incorrect"
-        assert "Total:" in output or "total:" in output, "Total label missing"
-        assert expected_total in output, "Total value incorrect"
-        assert "Thank you" in output, "Thank you message missing"
-        assert "Peculiar Emporium" in output, "Shop name missing from thank you"
+    # Replace initial values with different ones
+    modified_code = code.replace('people = 2', 'people = 3')
+    modified_code = modified_code.replace('bagA = 23', 'bagA = 30')
+    modified_code = modified_code.replace('bagB = 17', 'bagB = 25')
+    modified_code = modified_code.replace('bagC = 19', 'bagC = 20')
+    
+    # Execute modified code and capture output
+    old_stdout = sys.stdout
+    sys.stdout = StringIO()
+    
+    try:
+        exec(modified_code)
+        output = sys.stdout.getvalue()
+    finally:
+        sys.stdout = old_stdout
+    
+    # Check if outputs match expected values with modified inputs
+    expected_total = 75
+    expected_first_share = 18
+    expected_second_share = 15
+    
+    hardcoded = False
+    
+    if str(expected_total) not in output:
+        hardcoded = True
+    if str(expected_first_share) not in output:
+        hardcoded = True
+    if str(expected_second_share) not in output:
+        hardcoded = True
+    
+    return hardcoded
+
+
+def test_total_candy_variable_exists():
+    """Test that total_candy variable exists"""
+    try:
+        import task1
+        assert hasattr(task1, 'total_candy'), "Missing required variable: total_candy"
+    except ImportError:
+        pytest.fail("Could not import task1.py")
+
+
+def test_share_variable_exists():
+    """Test that share variable exists"""
+    try:
+        import task1
+        assert hasattr(task1, 'share'), "Missing required variable: share"
+    except ImportError:
+        pytest.fail("Could not import task1.py")
+
+
+def test_leftover_variable_exists():
+    """Test that leftover variable exists"""
+    try:
+        import task1
+        assert hasattr(task1, 'leftover'), "Missing required variable: leftover"
+    except ImportError:
+        pytest.fail("Could not import task1.py")
+
+
+def test_total_candy(capsys):
+    """Test total candy calculation - 3 points"""
+    try:
+        import task1
+        import importlib
+        importlib.reload(task1)
+    except ImportError:
+        pytest.fail("Could not import task1.py")
+    
+    output = capsys.readouterr().out
+    expected_total = 59
+    
+    assert str(expected_total) in output, "total_candy miscalculated or not printed"
+    assert task1.total_candy == expected_total, "total_candy miscalculated"
+    assert not check_hardcoding(), "Hard-coding detected"
+
+
+def test_first_each_share(capsys):
+    """Test first division - share with 3 people - 3 points"""
+    try:
+        import task1
+        import importlib
+        importlib.reload(task1)
+    except ImportError:
+        pytest.fail("Could not import task1.py")
+    
+    output = capsys.readouterr().out
+    expected_share = 19
+    
+    assert str(expected_share) in output, "share miscalculated in scenario 1"
+    assert not check_hardcoding(), "Hard-coding detected"
+
+
+def test_first_leftover(capsys):
+    """Test first division - leftover with 3 people - 2 points"""
+    try:
+        import task1
+        import importlib
+        importlib.reload(task1)
+    except ImportError:
+        pytest.fail("Could not import task1.py")
+    
+    output = capsys.readouterr().out
+    expected_leftover = 2
+    
+    assert str(expected_leftover) in output, "leftover miscalculated in scenario 1"
+    assert not check_hardcoding(), "Hard-coding detected"
+
+
+def test_second_each_share(capsys):
+    """Test second division - share with 4 people - 3 points"""
+    try:
+        import task1
+        import importlib
+        importlib.reload(task1)
+    except ImportError:
+        pytest.fail("Could not import task1.py")
+    
+    output = capsys.readouterr().out
+    expected_share = 14
+    lines = output.split('\n')
+    
+    assert str(expected_share) in '\n'.join(lines[-3:]), "share miscalculated in scenario 2"
+    assert task1.share == expected_share, "share miscalculated in scenario 2"
+    assert not check_hardcoding(), "Hard-coding detected"
+
+
+def test_second_leftover(capsys):
+    """Test second division - leftover with 4 people - 2 points"""
+    try:
+        import task1
+        import importlib
+        importlib.reload(task1)
+    except ImportError:
+        pytest.fail("Could not import task1.py")
+    
+    output = capsys.readouterr().out
+    expected_leftover = 3
+    lines = output.split('\n')
+    
+    assert str(expected_leftover) in '\n'.join(lines[-2:]), "leftover miscalculated in scenario 2"
+    assert task1.leftover == expected_leftover, "leftover miscalculated in scenario 2"
+    assert not check_hardcoding(), "Hard-coding detected"
